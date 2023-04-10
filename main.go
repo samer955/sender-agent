@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/samer955/gomonitor/service"
+	"github.com/samer955/sender-agent.git/service"
 	"os"
 	"os/signal"
 	"syscall"

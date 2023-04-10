@@ -1,4 +1,4 @@
-module sender-agent
+module github.com/samer955/sender-agent.git
 
 go 1.19
 
