@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	psub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/samer955/sender-agent.git/bootstrap"
-	"github.com/samer955/sender-agent.git/config"
-	"github.com/samer955/sender-agent.git/producer"
+	"github.com/samer955/sender-agent/bootstrap"
+	"github.com/samer955/sender-agent/config"
+	"github.com/samer955/sender-agent/producer"
 
 	"log"
 	"time"

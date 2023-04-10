@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/samer955/sender-agent.git/service"
+	"github.com/samer955/sender-agent/service"
 	"os"
 	"os/signal"
 	"syscall"
