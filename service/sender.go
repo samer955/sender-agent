@@ -70,7 +70,8 @@ func (s *Sender) sendSystemInfo() {
 			panic(err)
 		}
 		s.publish(s.Node.Metrics.System, topic)
-		time.Sleep(10 * time.Second)
+
+		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
 
 }
@@ -90,7 +91,7 @@ func (s *Sender) sendCpuIfo() {
 			panic(err)
 		}
 		s.publish(s.Node.Metrics.Cpu, topic)
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
 
 }
@@ -110,7 +111,7 @@ func (s *Sender) sendRamInfo() {
 			panic(err)
 		}
 		s.publish(s.Node.Metrics.Memory, topic)
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
 
 }
@@ -135,7 +136,7 @@ func (s *Sender) sendBandInfo() {
 		}
 
 		s.publish(s.Node.Metrics.Bandwidth, topic)
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
 
 }
@@ -155,7 +156,7 @@ func (s *Sender) sendTcpInfo() {
 			panic(err)
 		}
 		s.publish(s.Node.Metrics.Tcp, topic)
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
 
 }

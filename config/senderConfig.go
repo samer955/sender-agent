@@ -4,12 +4,14 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
 type SenderConfig struct {
 	topics       []string
 	discoveryTag string
+	frequency    int
 }
 
 var config SenderConfig
@@ -32,6 +34,14 @@ func init() {
 	}
 	config.discoveryTag = discovery
 
+	frequencyString := os.Getenv("FREQUENCY")
+	if frequencyString == "" {
+		log.Println("FREQUENCY ENV NOT FOUND. SET AUTO-FREQUENCY TO 20 SEC")
+		config.frequency = 20
+	} else {
+		config.frequency, _ = strconv.Atoi(frequencyString)
+	}
+
 }
 
 func GetConfig() SenderConfig {
@@ -44,4 +54,8 @@ func (c *SenderConfig) Topics() []string {
 
 func (c *SenderConfig) DiscoveryTag() string {
 	return c.discoveryTag
+}
+
+func (c *SenderConfig) Frequency() int {
+	return c.frequency
 }
