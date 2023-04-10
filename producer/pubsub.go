@@ -1,25 +1,32 @@
-package pubsub
+package producer
 
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/libp2p/go-libp2p/core/host"
 	"log"
 )
 
 type PubSubService struct {
-	psub *pubsub.PubSub
+	psub   *pubsub.PubSub
+	Topics map[string]*pubsub.Topic
 }
 
-// NewPubSubService return a new PubSub Service using the GossipSub Service
+// NewPubSubService return a new PubSubService Service using the GossipSub Service
 func NewPubSubService(ctx context.Context, host host.Host) *PubSubService {
 	ps, err := pubsub.NewGossipSub(ctx, host)
 	if err != nil {
-		log.Println("unable to create the pubsub service")
+		log.Println("unable to create the producer service")
 		return nil
 	}
-	return &PubSubService{psub: ps}
+	topics := make(map[string]*pubsub.Topic)
+
+	return &PubSubService{
+		psub:   ps,
+		Topics: topics,
+	}
 }
 
 // JoinTopic allow the Peers to join a Topic on Pubsub
@@ -31,6 +38,8 @@ func (p *PubSubService) JoinTopic(room string) (*pubsub.Topic, error) {
 		return nil, err
 	}
 	log.Println("Joined room:", room)
+
+	p.Topics[room] = topic
 
 	return topic, nil
 
@@ -61,4 +70,13 @@ func (p *PubSubService) Publish(data any, context context.Context, topic *pubsub
 	}
 	//public the data in the topic
 	return topic.Publish(context, msgBytes)
+}
+
+func (p *PubSubService) GetTopic(topicName string) (*pubsub.Topic, error) {
+
+	topic, ok := p.Topics[topicName]
+	if ok {
+		return topic, nil
+	}
+	return nil, errors.New("Topic:" + " " + topicName + " " + "not found")
 }

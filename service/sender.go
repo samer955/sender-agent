@@ -2,64 +2,56 @@ package service
 
 import (
 	"context"
-	"errors"
 	psub "github.com/libp2p/go-libp2p-pubsub"
-	"github.com/samer955/gomdnsdisco/node"
-	"github.com/samer955/gomdnsdisco/pubsub"
+	"github.com/samer955/sender-agent/bootstrap"
+	"github.com/samer955/sender-agent/config"
+	"github.com/samer955/sender-agent/producer"
 	"log"
 	"time"
 )
 
-var (
-	ctx         context.Context
-	topicsMap   = make(map[string]*psub.Topic)
-	roomsTopics = []string{"system", "cpu", "bandwidth", "memory", "tcp"}
-)
-
 type Sender struct {
-	node   node.Node
-	pubsub pubsub.PubSubService
+	Context       context.Context
+	Node          bootstrap.Node
+	PubSubService *producer.PubSubService
+	Config        config.SenderConfig
 }
 
 func NewSender() *Sender {
 
 	ctx := context.Background()
-	node := node.InitializeNode(ctx)
-	pubsub := pubsub.NewPubSubService(ctx, node.Host)
+	cfg := config.GetConfig()
+	node := bootstrap.InitializeNode(ctx, cfg.DiscoveryTag())
+	ps := producer.NewPubSubService(ctx, node.Host)
 
-	return &Sender{*node, *pubsub}
+	return &Sender{
+		Context:       ctx,
+		Node:          *node,
+		PubSubService: ps,
+		Config:        cfg,
+	}
 
 }
 
 func (s *Sender) subscribeTopics() {
 
-	for _, room := range roomsTopics {
-		topic, err := s.pubsub.JoinTopic(room)
+	for _, room := range s.Config.Topics() {
+		topic, err := s.PubSubService.JoinTopic(room)
 		if err != nil {
 			panic(err)
 		}
 
-		_, perr := s.pubsub.Subscribe(topic)
+		_, perr := s.PubSubService.Subscribe(topic)
 		if perr != nil {
 			panic(err)
 		}
-		topicsMap[room] = topic
 	}
-}
-
-func checkTopic(topicName string) (*psub.Topic, error) {
-
-	topic, ok := topicsMap[topicName]
-	if ok {
-		return topic, nil
-	}
-	return nil, errors.New("topic not found")
 }
 
 func (s *Sender) publish(data any, topic *psub.Topic) {
-	err := s.pubsub.Publish(data, ctx, topic)
+	err := s.PubSubService.Publish(data, s.Context, topic)
 	if err != nil {
-		log.Println("Error publishing data", err)
+		log.Println("Error publishing data" + err.Error())
 	}
 	log.Println("Data published: ", data)
 }
@@ -67,16 +59,16 @@ func (s *Sender) publish(data any, topic *psub.Topic) {
 func (s *Sender) sendSystemInfo() {
 
 	for {
-		//it means the local node is the only node in the LAN
-		if s.node.Host.Peerstore().Peers().Len() == 0 {
+		//it means the local bootstrap is the only bootstrap in the LAN
+		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
-		s.node.Metrics.System.Time = time.Now()
-		topic, err := checkTopic("system")
+		s.Node.Metrics.System.Time = time.Now()
+		topic, err := s.PubSubService.GetTopic("SYSTEM")
 		if err != nil {
 			panic(err)
 		}
-		s.publish(s.node.Metrics.System, topic)
+		s.publish(s.Node.Metrics.System, topic)
 		time.Sleep(10 * time.Second)
 	}
 
@@ -85,18 +77,18 @@ func (s *Sender) sendSystemInfo() {
 func (s *Sender) sendCpuIfo() {
 
 	for {
-		//it means the local node is the only node in the LAN
-		if s.node.Host.Peerstore().Peers().Len() == 0 {
+		//it means the local bootstrap is the only bootstrap in the LAN
+		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
 
-		s.node.Metrics.Cpu.UpdateUsagePercent()
-		s.node.Metrics.Cpu.Time = time.Now()
-		topic, err := checkTopic("cpu")
+		s.Node.Metrics.Cpu.UpdateUtilization()
+		s.Node.Metrics.Cpu.Time = time.Now()
+		topic, err := s.PubSubService.GetTopic("CPU")
 		if err != nil {
 			panic(err)
 		}
-		s.publish(s.node.Metrics.Cpu, topic)
+		s.publish(s.Node.Metrics.Cpu, topic)
 		time.Sleep(10 * time.Second)
 	}
 
@@ -105,18 +97,18 @@ func (s *Sender) sendCpuIfo() {
 func (s *Sender) sendRamInfo() {
 
 	for {
-		//it means the local node is the only node in the LAN
-		if s.node.Host.Peerstore().Peers().Len() == 0 {
+		//it means the local bootstrap is the only bootstrap in the LAN
+		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
 
-		s.node.Metrics.Ram.UpdateUsagePercent()
-		s.node.Metrics.Ram.Time = time.Now()
-		topic, err := checkTopic("memory")
+		//s.bootstrap.Metrics.Memory.UpdateUsagePercent()
+		s.Node.Metrics.Memory.Time = time.Now()
+		topic, err := s.PubSubService.GetTopic("MEMORY")
 		if err != nil {
 			panic(err)
 		}
-		s.publish(s.node.Metrics.Ram, topic)
+		s.publish(s.Node.Metrics.Memory, topic)
 		time.Sleep(10 * time.Second)
 	}
 
@@ -125,23 +117,23 @@ func (s *Sender) sendRamInfo() {
 func (s *Sender) sendBandInfo() {
 
 	for {
-		//it means the local node is the only node in the LAN
-		if s.node.Host.Peerstore().Peers().Len() == 0 {
+		//it means the local bootstrap is the only bootstrap in the LAN
+		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
-		actual := s.node.BandCounter.GetBandwidthTotals()
-		s.node.Metrics.Bandwidth.TotalIn = actual.TotalIn
-		s.node.Metrics.Bandwidth.TotalOut = actual.TotalOut
-		s.node.Metrics.Bandwidth.RateIn = int(actual.RateIn)
-		s.node.Metrics.Bandwidth.RateOut = int(actual.RateOut)
-		s.node.Metrics.Bandwidth.Time = time.Now()
+		actual := s.Node.BandCounter.GetBandwidthTotals()
+		s.Node.Metrics.Bandwidth.TotalIn = actual.TotalIn
+		s.Node.Metrics.Bandwidth.TotalOut = actual.TotalOut
+		s.Node.Metrics.Bandwidth.RateIn = int(actual.RateIn)
+		s.Node.Metrics.Bandwidth.RateOut = int(actual.RateOut)
+		s.Node.Metrics.Bandwidth.Time = time.Now()
 
-		topic, err := checkTopic("bandwidth")
+		topic, err := s.PubSubService.GetTopic("BANDWIDTH")
 		if err != nil {
 			panic(err)
 		}
 
-		s.publish(s.node.Metrics.Bandwidth, topic)
+		s.publish(s.Node.Metrics.Bandwidth, topic)
 		time.Sleep(10 * time.Second)
 	}
 
@@ -150,18 +142,18 @@ func (s *Sender) sendBandInfo() {
 func (s *Sender) sendTcpInfo() {
 
 	for {
-		//it means the local node is the only node in the LAN
-		if s.node.Host.Peerstore().Peers().Len() == 0 {
+		//it means the local bootstrap is the only bootstrap in the LAN
+		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
 
-		s.node.Metrics.Tcp.UpdateQueueSize()
-		s.node.Metrics.Tcp.Time = time.Now()
-		topic, err := checkTopic("tcp")
+		s.Node.Metrics.Tcp.GetConnectionsQueueSize()
+		s.Node.Metrics.Tcp.Time = time.Now()
+		topic, err := s.PubSubService.GetTopic("TCP")
 		if err != nil {
 			panic(err)
 		}
-		s.publish(s.node.Metrics.Tcp, topic)
+		s.publish(s.Node.Metrics.Tcp, topic)
 		time.Sleep(10 * time.Second)
 	}
 

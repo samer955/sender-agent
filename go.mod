@@ -1,12 +1,12 @@
-module github.com/samer955/gomdnsdisco
+module sender-agent
 
 go 1.19
 
 require (
+	github.com/joho/godotenv v1.5.1
 	github.com/libp2p/go-libp2p v0.24.2
 	github.com/libp2p/go-libp2p-pubsub v0.8.2
 	github.com/shirou/gopsutil/v3 v3.22.12
-	github.com/ssimunic/gosensors v0.0.0-20170414000417-e7ab9a4e799b
 )
 
 require (

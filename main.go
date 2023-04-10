@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/samer955/gomdnsdisco/service"
+	"github.com/samer955/gomonitor/service"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,8 +10,8 @@ import (
 
 func main() {
 
-	agent := service.NewSender()
-	agent.Start()
+	sender := service.NewSender()
+	sender.Start()
 
 	//Run the program till its stopped (forced)
 	ch := make(chan os.Signal, 1)

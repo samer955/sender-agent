@@ -1,4 +1,4 @@
-package node
+package bootstrap
 
 import (
 	"context"
@@ -6,23 +6,23 @@ import (
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/host"
 	band "github.com/libp2p/go-libp2p/core/metrics"
-	"github.com/samer955/gomdnsdisco/metrics"
+	"github.com/samer955/sender-agent/metrics"
 	"log"
 	"net"
 )
 
-const discoveryTag = "discovery"
-
 type Node struct {
-	Ip          string
-	Host        host.Host
-	BandCounter *band.BandwidthCounter
-	Metrics     *metrics.Metrics
+	Ip           string
+	Host         host.Host
+	BandCounter  *band.BandwidthCounter
+	Metrics      *metrics.Metrics
+	discoveryTag string
 }
 
-func InitializeNode(ctx context.Context) *Node {
+func InitializeNode(ctx context.Context, discoveryTag string) *Node {
 
 	n := new(Node)
+	n.discoveryTag = discoveryTag
 	n.initializeBandCounter()
 	n.createLibp2pHost()
 	n.getIp()
@@ -45,12 +45,13 @@ func (n *Node) initMetrics() {
 // initialize Node using Libp2p, listening all ip4 address and default tcp port
 func (n *Node) createLibp2pHost() {
 
-	host, err := libp2p.New(libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"), libp2p.BandwidthReporter(n.BandCounter))
+	libp2phost, err := libp2p.New(libp2p.ListenAddrStrings("/ip4/0.0.0.0/tcp/0"), libp2p.BandwidthReporter(n.BandCounter))
 
 	if err != nil {
+		log.Println("Unable to create a Libp2p-Host")
 		panic(err)
 	}
-	n.Host = host
+	n.Host = libp2phost
 	log.Printf("New node initialized with host-ID %s\n", n.Host.ID().ShortString())
 
 }
@@ -82,7 +83,7 @@ func (n *Node) getIp() {
 
 func (n *Node) findPeers(ctx context.Context) {
 
-	peerChan := initMDNS(n.Host, discoveryTag)
+	peerChan := initMDNS(n.Host, n.discoveryTag)
 	for {
 		peer := <-peerChan
 		fmt.Println("Found peer:", peer.ID.ShortString(), ", connecting")
