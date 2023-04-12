@@ -54,13 +54,13 @@ func (s *Sender) publish(data any, topic *psub.Topic) {
 	if err != nil {
 		log.Println("Error publishing data" + err.Error())
 	}
-	log.Println("Data published: ", data)
+	log.Println("New Data published in topic " + topic.String())
 }
 
 func (s *Sender) sendSystemInfo() {
 
 	for {
-		//it means the local bootstrap is the only bootstrap in the LAN
+		//it means the local peer is the only peer in the LAN
 		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
