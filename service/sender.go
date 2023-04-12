@@ -105,7 +105,7 @@ func (s *Sender) sendRamInfo() {
 			continue
 		}
 
-		//s.bootstrap.Metrics.Memory.UpdateUsagePercent()
+		s.Node.Metrics.Memory.GetMemoryUtilization()
 		s.Node.Metrics.Memory.Time = time.Now()
 		topic, err := s.PubSubService.GetTopic("MEMORY")
 		if err != nil {
