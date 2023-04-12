@@ -65,6 +65,7 @@ func (s *Sender) sendSystemInfo() {
 			continue
 		}
 		s.Node.Metrics.System.Time = time.Now()
+		s.Node.Metrics.System.GetOnlineUsers()
 		topic, err := s.PubSubService.GetTopic("SYSTEM")
 		if err != nil {
 			panic(err)

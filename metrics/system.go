@@ -2,9 +2,11 @@ package metrics
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 	"time"
@@ -17,6 +19,7 @@ type System struct {
 	Architecture string    `json:"architecture"`
 	Platform     string    `json:"platform"`
 	Version      string    `json:"version"`
+	OnlineUsers  int       `json:"online_users"`
 	Time         time.Time `json:"time"`
 }
 
@@ -93,5 +96,21 @@ func (s *System) getIp() {
 		}
 	}
 	s.Ip = ""
+
+}
+
+func (s *System) GetOnlineUsers() {
+
+	// Execute the "who" command from Terminal
+	cmd := exec.Command("who")
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	// Count the number of lines in the output
+	lines := strings.Split(string(output), "\n")
+	s.OnlineUsers = len(lines) - 1
 
 }
