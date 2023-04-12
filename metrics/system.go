@@ -3,6 +3,7 @@ package metrics
 import (
 	"bufio"
 	"log"
+	"net"
 	"os"
 	"runtime"
 	"strings"
@@ -21,26 +22,23 @@ type System struct {
 
 func newSystem() *System {
 	var system System
-	system.Ip = ip
 	system.GetSystemInformation()
+	system.getIp()
 	return &system
 }
 
 func (s *System) GetSystemInformation() {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Println("Unable to get the hostname")
-		hostname = ""
-	}
 	s.Hostname = hostname
 	s.Os = runtime.GOOS
 	s.Architecture = runtime.GOARCH
 
-	s.Platform, s.Version, err = getPlatformAndVersion()
+	platform, version, err := getPlatformAndVersion()
 	if err != nil {
 		log.Println(err)
 	}
+
+	s.Platform, s.Version = platform, version
 
 }
 
@@ -75,4 +73,25 @@ func getPlatformAndVersion() (string, string, error) {
 	}
 
 	return platform, version, nil
+}
+
+func (s *System) getIp() {
+
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		s.Ip = ""
+		return
+	}
+
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				s.Ip = ipnet.IP.String()
+				return
+			}
+		}
+	}
+	s.Ip = ""
+
 }

@@ -10,7 +10,7 @@ import (
 )
 
 type Cpu struct {
-	Ip          string    `json:"ip"`
+	Hostname    string    `json:"hostname"`
 	Model       string    `json:"model"`
 	Utilization float64   `json:"utilization"`
 	Time        time.Time `json:"time"`
@@ -18,7 +18,7 @@ type Cpu struct {
 
 func newCpu() *Cpu {
 	var cpu Cpu
-	cpu.Ip = ip
+	cpu.Hostname = hostname
 	cpu.getCPUModel()
 	return &cpu
 }

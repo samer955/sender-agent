@@ -1,17 +1,17 @@
 package metrics
 
 import (
+	"log"
 	"os"
 	"time"
 )
 
-var ip string
+var hostname string
 
 func (m *Metrics) InitializeMetrics() {
 
-	os.Hostname()
+	hostname = getHostname()
 
-	ip = m.Ip
 	m.System = newSystem()
 	m.Cpu = newCpu()
 	m.Memory = newMemory()
@@ -21,7 +21,6 @@ func (m *Metrics) InitializeMetrics() {
 }
 
 type Metrics struct {
-	Ip        string
 	System    *System
 	Cpu       *Cpu
 	Memory    *Memory
@@ -41,6 +40,16 @@ type Bandwidth struct {
 
 func newBandwidth() *Bandwidth {
 	var bandwidth Bandwidth
-	bandwidth.Ip = ip
 	return &bandwidth
+}
+
+func getHostname() string {
+
+	host, err := os.Hostname()
+	if err != nil {
+		log.Println("Unable to get the hostname")
+		host = ""
+	}
+	return host
+
 }

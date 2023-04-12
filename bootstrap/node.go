@@ -8,11 +8,9 @@ import (
 	band "github.com/libp2p/go-libp2p/core/metrics"
 	"github.com/samer955/sender-agent/metrics"
 	"log"
-	"net"
 )
 
 type Node struct {
-	Ip           string
 	Host         host.Host
 	BandCounter  *band.BandwidthCounter
 	Metrics      *metrics.Metrics
@@ -25,7 +23,6 @@ func InitializeNode(ctx context.Context, discoveryTag string) *Node {
 	n.discoveryTag = discoveryTag
 	n.initializeBandCounter()
 	n.createLibp2pHost()
-	n.getIp()
 	n.initMetrics()
 
 	go n.findPeers(ctx)
@@ -36,9 +33,9 @@ func InitializeNode(ctx context.Context, discoveryTag string) *Node {
 
 func (n *Node) initMetrics() {
 
-	metrics := metrics.Metrics{Ip: n.Ip}
-	metrics.InitializeMetrics()
-	n.Metrics = &metrics
+	var metr metrics.Metrics
+	metr.InitializeMetrics()
+	n.Metrics = &metr
 
 }
 
@@ -58,27 +55,6 @@ func (n *Node) createLibp2pHost() {
 
 func (n *Node) initializeBandCounter() {
 	n.BandCounter = band.NewBandwidthCounter()
-}
-
-func (n *Node) getIp() {
-
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		n.Ip = ""
-		return
-	}
-
-	for _, address := range addrs {
-		// check the address type and if it is not a loopback the display it
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				n.Ip = ipnet.IP.String()
-				return
-			}
-		}
-	}
-	n.Ip = ""
-
 }
 
 func (n *Node) findPeers(ctx context.Context) {

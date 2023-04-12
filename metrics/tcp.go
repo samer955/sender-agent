@@ -2,20 +2,22 @@ package metrics
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
 
 var execCommand = exec.Command
 
-// Queue Size = number of open TCP connections
-// Received = number of segments received
-// Sent = number of segments sent
+// Tcp QueueSize = number of open TCP connections
+// Tcp SegmentsReceived = number of segments received
+// Tcp SegmentsSent = number of segments sent
 type Tcp struct {
-	Ip               string    `json:"ip"`
-	QueueSize        int       `json:"tcp_queue_size"`
+	Hostname         string    `json:"hostname"`
+	QueueSize        int       `json:"queue_size"`
 	SegmentsReceived int       `json:"segments_received"`
 	SegmentsSent     int       `json:"segments_sent"`
 	Time             time.Time `json:"time"`
@@ -23,11 +25,10 @@ type Tcp struct {
 
 func newTcp() *Tcp {
 	var tcp Tcp
-	tcp.Ip = ip
+	tcp.Hostname = hostname
 	return &tcp
 }
 
-// Working on Windows and Linux in order to get the number of open tcp queue of the bootstrap.
 // Execution of the "netstat -na" Command in order to get all the ESTABLISHED Queue
 func (t *Tcp) GetConnectionsQueueSize() {
 	out, err := execCommand("netstat", "-na").Output()
@@ -44,6 +45,26 @@ func (t *Tcp) GetConnectionsQueueSize() {
 	t.QueueSize = tcpQueue
 }
 
+func (t *Tcp) GetSegments() {
+
+	pr, err := execCommand("netstat", "-st").Output()
+	if err != nil {
+		log.Println(err)
+		t.SegmentsSent, t.SegmentsReceived = 0, 0
+		return
+	}
+	received, sent, err := numbersOfSegments(string(pr))
+
+	if err != nil {
+		log.Println(err)
+	}
+	t.SegmentsReceived = received
+	t.SegmentsSent = sent
+	return
+
+}
+
+// Format the output of "netstat -na" to find the ESTAB tcp queue
 func numberOfTcpQueue(s string) (tcpConn int, err error) {
 
 	var lines [][]string
@@ -62,4 +83,42 @@ func numberOfTcpQueue(s string) (tcpConn int, err error) {
 	}
 	err = scanner.Err()
 	return len(lines), err
+}
+
+func numbersOfSegments(s string) (int, int, error) {
+
+	var segmentsReceived = 0
+	var segmentsSent = 0
+
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+		words := strings.Fields(line)
+		if len(words) == 3 {
+			if strings.Contains(words[1], "segments") && strings.Contains(words[2], "received") {
+				value, err := strconv.Atoi(words[0])
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					segmentsReceived = value
+				}
+			}
+		}
+		if len(words) == 4 {
+			if strings.Contains(words[1], "segments") && strings.Contains(words[2], "sent") {
+				value, err := strconv.Atoi(words[0])
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					segmentsSent = value
+				}
+			}
+		}
+	}
+	err := scanner.Err()
+	return segmentsReceived, segmentsSent, err
+
 }

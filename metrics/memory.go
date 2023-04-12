@@ -10,7 +10,7 @@ import (
 )
 
 type Memory struct {
-	Ip          string    `json:"ip"`
+	Hostname    string    `json:"hostname"`
 	Total       float64   `json:"total"`
 	Utilization float64   `json:"utilization,omitempty"`
 	Time        time.Time `json:"time"`
@@ -19,7 +19,7 @@ type Memory struct {
 func newMemory() *Memory {
 
 	var ram Memory
-	ram.Ip = ip
+	ram.Hostname = hostname
 	totalRam, err := getTotalMemory()
 	if err != nil {
 		log.Println(err)
