@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/google/uuid"
 	psub "github.com/libp2p/go-libp2p-pubsub"
 	"github.com/samer955/sender-agent/bootstrap"
 	"github.com/samer955/sender-agent/config"
@@ -64,12 +65,15 @@ func (s *Sender) sendSystemInfo() {
 		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
-		s.Node.Metrics.System.Time = time.Now()
-		s.Node.Metrics.System.GetOnlineUsers()
 		topic, err := s.PubSubService.GetTopic("SYSTEM")
 		if err != nil {
 			panic(err)
 		}
+
+		s.Node.Metrics.System.UUID = uuid.New().String()
+		s.Node.Metrics.System.Time = time.Now()
+		s.Node.Metrics.System.GetOnlineUsers()
+
 		s.publish(s.Node.Metrics.System, topic)
 
 		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
@@ -80,17 +84,19 @@ func (s *Sender) sendSystemInfo() {
 func (s *Sender) sendCpuIfo() {
 
 	for {
-		//it means the local bootstrap is the only bootstrap in the LAN
+
 		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
-
-		s.Node.Metrics.Cpu.UpdateUtilization()
-		s.Node.Metrics.Cpu.Time = time.Now()
 		topic, err := s.PubSubService.GetTopic("CPU")
 		if err != nil {
 			panic(err)
 		}
+
+		s.Node.Metrics.Cpu.UUID = uuid.New().String()
+		s.Node.Metrics.Cpu.UpdateUtilization()
+		s.Node.Metrics.Cpu.Time = time.Now()
+
 		s.publish(s.Node.Metrics.Cpu, topic)
 		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
@@ -100,17 +106,19 @@ func (s *Sender) sendCpuIfo() {
 func (s *Sender) sendRamInfo() {
 
 	for {
-		//it means the local bootstrap is the only bootstrap in the LAN
+
 		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
-
-		s.Node.Metrics.Memory.GetMemoryUtilization()
-		s.Node.Metrics.Memory.Time = time.Now()
 		topic, err := s.PubSubService.GetTopic("MEMORY")
 		if err != nil {
 			panic(err)
 		}
+
+		s.Node.Metrics.Memory.UUID = uuid.New().String()
+		s.Node.Metrics.Memory.GetMemoryUtilization()
+		s.Node.Metrics.Memory.Time = time.Now()
+
 		s.publish(s.Node.Metrics.Memory, topic)
 		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
@@ -120,21 +128,22 @@ func (s *Sender) sendRamInfo() {
 func (s *Sender) sendBandInfo() {
 
 	for {
-		//it means the local bootstrap is the only bootstrap in the LAN
+
 		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
+		topic, err := s.PubSubService.GetTopic("BANDWIDTH")
+		if err != nil {
+			panic(err)
+		}
+
 		actual := s.Node.BandCounter.GetBandwidthTotals()
+		s.Node.Metrics.Bandwidth.UUID = uuid.New().String()
 		s.Node.Metrics.Bandwidth.TotalIn = actual.TotalIn
 		s.Node.Metrics.Bandwidth.TotalOut = actual.TotalOut
 		s.Node.Metrics.Bandwidth.RateIn = int(actual.RateIn)
 		s.Node.Metrics.Bandwidth.RateOut = int(actual.RateOut)
 		s.Node.Metrics.Bandwidth.Time = time.Now()
-
-		topic, err := s.PubSubService.GetTopic("BANDWIDTH")
-		if err != nil {
-			panic(err)
-		}
 
 		s.publish(s.Node.Metrics.Bandwidth, topic)
 		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
@@ -145,17 +154,19 @@ func (s *Sender) sendBandInfo() {
 func (s *Sender) sendTcpInfo() {
 
 	for {
-		//it means the local bootstrap is the only bootstrap in the LAN
+
 		if s.Node.Host.Peerstore().Peers().Len() == 0 {
 			continue
 		}
-
-		s.Node.Metrics.Tcp.GetConnectionsQueueSize()
-		s.Node.Metrics.Tcp.Time = time.Now()
 		topic, err := s.PubSubService.GetTopic("TCP")
 		if err != nil {
 			panic(err)
 		}
+
+		s.Node.Metrics.Tcp.UUID = uuid.New().String()
+		s.Node.Metrics.Tcp.GetConnectionsQueueSize()
+		s.Node.Metrics.Tcp.Time = time.Now()
+
 		s.publish(s.Node.Metrics.Tcp, topic)
 		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
