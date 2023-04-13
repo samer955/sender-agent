@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"log"
+	"math"
 	"os"
 	"strings"
 	"time"
@@ -58,11 +59,14 @@ func (c *Cpu) UpdateUtilization() {
 
 	percent, err := cpu.Percent(0, false)
 	if err != nil {
-		log.Println("Unable to get Cpu percent usage")
-		c.Utilization = 00
+		log.Println("Unable to get Cpu percent usage. Set default to 0.00%")
+		c.Utilization = 0.00
 		return
 	}
 
-	c.Utilization = percent[0]
+	//Round Float. 2 places after decimal --> e.g. 50.25
+	res := math.Round(percent[0]*100) / 100
+
+	c.Utilization = res
 
 }

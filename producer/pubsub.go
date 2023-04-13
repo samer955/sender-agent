@@ -59,16 +59,16 @@ func (p *PubSubService) Subscribe(topic *pubsub.Topic) (*pubsub.Subscription, er
 	return subscribe, nil
 }
 
+//publish any data on a specific topic
 func (p *PubSubService) Publish(data any, context context.Context, topic *pubsub.Topic) error {
 
-	//JSON encoding of cpu in order to send the data as []byte.
 	msgBytes, err := json.Marshal(data)
 
 	if err != nil {
 		log.Println("cannot convert to Bytes ", data)
 		return err
 	}
-	//public the data in the topic
+
 	return topic.Publish(context, msgBytes)
 }
 

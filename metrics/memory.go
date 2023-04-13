@@ -3,6 +3,7 @@ package metrics
 import (
 	"errors"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -41,7 +42,8 @@ func (mem *Memory) GetMemoryUtilization() {
 	usedRAM := totalRAM - freeRAM
 	usedRAMPercent := (usedRAM / totalRAM) * 100.0
 
-	mem.Utilization = usedRAMPercent
+	//Round Float value, 2 places after decimal
+	mem.Utilization = math.Round(usedRAMPercent*100) / 100
 
 }
 
