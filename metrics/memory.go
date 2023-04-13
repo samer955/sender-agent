@@ -11,6 +11,7 @@ import (
 )
 
 type Memory struct {
+	UUID        string    `json:"uuid"`
 	Hostname    string    `json:"hostname"`
 	Total       float64   `json:"total"`
 	Utilization float64   `json:"utilization,omitempty"`

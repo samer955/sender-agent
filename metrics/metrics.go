@@ -30,6 +30,7 @@ type Metrics struct {
 
 // incoming and outgoing data transferred by the local peer.
 type Bandwidth struct {
+	UUID     string    `json:"uuid"`
 	Ip       string    `json:"ip"`
 	TotalIn  int64     `json:"total_in"`
 	TotalOut int64     `json:"total_out"`

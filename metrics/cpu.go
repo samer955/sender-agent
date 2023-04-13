@@ -11,6 +11,7 @@ import (
 )
 
 type Cpu struct {
+	UUID        string    `json:"uuid"`
 	Hostname    string    `json:"hostname"`
 	Model       string    `json:"model"`
 	Utilization float64   `json:"utilization"`

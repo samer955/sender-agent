@@ -16,6 +16,7 @@ var execCommand = exec.Command
 // Tcp SegmentsReceived = number of segments received
 // Tcp SegmentsSent = number of segments sent
 type Tcp struct {
+	UUID             string    `json:"uuid"`
 	Hostname         string    `json:"hostname"`
 	QueueSize        int       `json:"queue_size"`
 	SegmentsReceived int       `json:"segments_received"`

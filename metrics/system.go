@@ -13,6 +13,7 @@ import (
 )
 
 type System struct {
+	UUID         string    `json:"uuid"`
 	Ip           string    `json:"ip"`
 	Hostname     string    `json:"hostname"`
 	Os           string    `json:"os"`
