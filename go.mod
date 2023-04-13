@@ -3,6 +3,7 @@ module github.com/samer955/sender-agent
 go 1.19
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/libp2p/go-libp2p v0.25.0
 	github.com/libp2p/go-libp2p-pubsub v0.9.3
