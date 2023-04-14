@@ -11,7 +11,7 @@ import (
 
 type PubSubService struct {
 	psub   *pubsub.PubSub
-	Topics map[string]*pubsub.Topic
+	Topics []*pubsub.Topic
 }
 
 // NewPubSubService return a new PubSubService Service using the GossipSub Service
@@ -21,7 +21,8 @@ func NewPubSubService(ctx context.Context, host host.Host) *PubSubService {
 		log.Println("unable to create the producer service")
 		return nil
 	}
-	topics := make(map[string]*pubsub.Topic)
+
+	var topics []*pubsub.Topic
 
 	return &PubSubService{
 		psub:   ps,
@@ -39,7 +40,7 @@ func (p *PubSubService) JoinTopic(room string) (*pubsub.Topic, error) {
 	}
 	log.Println("Joined room:", room)
 
-	p.Topics[room] = topic
+	p.Topics = append(p.Topics, topic)
 
 	return topic, nil
 
@@ -59,7 +60,7 @@ func (p *PubSubService) Subscribe(topic *pubsub.Topic) (*pubsub.Subscription, er
 	return subscribe, nil
 }
 
-//publish any data on a specific topic
+// publish any data on a specific topic
 func (p *PubSubService) Publish(data any, context context.Context, topic *pubsub.Topic) error {
 
 	msgBytes, err := json.Marshal(data)
@@ -74,9 +75,10 @@ func (p *PubSubService) Publish(data any, context context.Context, topic *pubsub
 
 func (p *PubSubService) GetTopic(topicName string) (*pubsub.Topic, error) {
 
-	topic, ok := p.Topics[topicName]
-	if ok {
-		return topic, nil
+	for _, topic := range p.Topics {
+		if topic.String() == topicName {
+			return topic, nil
+		}
 	}
 	return nil, errors.New("Topic:" + " " + topicName + " " + "not found")
 }

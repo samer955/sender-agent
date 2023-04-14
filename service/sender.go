@@ -32,13 +32,45 @@ func NewSender() *Sender {
 		PubSubService: ps,
 		Config:        cfg,
 	}
+}
+
+func (s *Sender) Start() {
+
+	s.subscribeTopics()
+	//check if the local peer is the only one in the Lan.
+	for s.Node.Host.Peerstore().Peers().Len() == 1 {
+		continue
+	}
+	for _, topic := range s.PubSubService.Topics {
+		s.sendMetric(topic)
+	}
+
+}
+
+func (s *Sender) sendMetric(topic *psub.Topic) {
+
+	switch topic.String() {
+
+	case "SYSTEM":
+		go s.sendSystemMetric(topic)
+	case "CPU":
+		go s.sendCpuMetric(topic)
+	case "TCP":
+		go s.sendTcpMetric(topic)
+	case "MEMORY":
+		go s.sendMemoryMetric(topic)
+	case "BANDWIDTH":
+		go s.sendBandwidthMetric(topic)
+	default:
+		log.Println("Topic " + topic.String() + " " + "not found")
+	}
 
 }
 
 func (s *Sender) subscribeTopics() {
 
-	for _, room := range s.Config.Topics() {
-		topic, err := s.PubSubService.JoinTopic(room)
+	for _, topicName := range s.Config.Topics() {
+		topic, err := s.PubSubService.JoinTopic(topicName)
 		if err != nil {
 			panic(err)
 		}
@@ -58,17 +90,9 @@ func (s *Sender) publish(data any, topic *psub.Topic) {
 	log.Println("New Data published in topic " + topic.String())
 }
 
-func (s *Sender) sendSystemInfo() {
+func (s *Sender) sendSystemMetric(topic *psub.Topic) {
 
 	for {
-		//it means the local peer is the only peer in the LAN
-		if s.Node.Host.Peerstore().Peers().Len() == 0 {
-			continue
-		}
-		topic, err := s.PubSubService.GetTopic("SYSTEM")
-		if err != nil {
-			panic(err)
-		}
 
 		s.Node.Metrics.System.UUID = uuid.New().String()
 		s.Node.Metrics.System.Time = time.Now()
@@ -81,17 +105,9 @@ func (s *Sender) sendSystemInfo() {
 
 }
 
-func (s *Sender) sendCpuIfo() {
+func (s *Sender) sendCpuMetric(topic *psub.Topic) {
 
 	for {
-
-		if s.Node.Host.Peerstore().Peers().Len() == 0 {
-			continue
-		}
-		topic, err := s.PubSubService.GetTopic("CPU")
-		if err != nil {
-			panic(err)
-		}
 
 		s.Node.Metrics.Cpu.UUID = uuid.New().String()
 		s.Node.Metrics.Cpu.UpdateUtilization()
@@ -103,17 +119,9 @@ func (s *Sender) sendCpuIfo() {
 
 }
 
-func (s *Sender) sendRamInfo() {
+func (s *Sender) sendMemoryMetric(topic *psub.Topic) {
 
 	for {
-
-		if s.Node.Host.Peerstore().Peers().Len() == 0 {
-			continue
-		}
-		topic, err := s.PubSubService.GetTopic("MEMORY")
-		if err != nil {
-			panic(err)
-		}
 
 		s.Node.Metrics.Memory.UUID = uuid.New().String()
 		s.Node.Metrics.Memory.GetMemoryUtilization()
@@ -125,17 +133,9 @@ func (s *Sender) sendRamInfo() {
 
 }
 
-func (s *Sender) sendBandInfo() {
+func (s *Sender) sendBandwidthMetric(topic *psub.Topic) {
 
 	for {
-
-		if s.Node.Host.Peerstore().Peers().Len() == 0 {
-			continue
-		}
-		topic, err := s.PubSubService.GetTopic("BANDWIDTH")
-		if err != nil {
-			panic(err)
-		}
 
 		actual := s.Node.BandCounter.GetBandwidthTotals()
 		s.Node.Metrics.Bandwidth.UUID = uuid.New().String()
@@ -151,17 +151,9 @@ func (s *Sender) sendBandInfo() {
 
 }
 
-func (s *Sender) sendTcpInfo() {
+func (s *Sender) sendTcpMetric(topic *psub.Topic) {
 
 	for {
-
-		if s.Node.Host.Peerstore().Peers().Len() == 0 {
-			continue
-		}
-		topic, err := s.PubSubService.GetTopic("TCP")
-		if err != nil {
-			panic(err)
-		}
 
 		s.Node.Metrics.Tcp.UUID = uuid.New().String()
 		s.Node.Metrics.Tcp.GetConnectionsQueueSize()
@@ -170,16 +162,5 @@ func (s *Sender) sendTcpInfo() {
 		s.publish(s.Node.Metrics.Tcp, topic)
 		time.Sleep(time.Duration(s.Config.Frequency()) * time.Second)
 	}
-
-}
-
-func (s *Sender) Start() {
-
-	s.subscribeTopics()
-	go s.sendSystemInfo()
-	go s.sendBandInfo()
-	go s.sendCpuIfo()
-	go s.sendRamInfo()
-	go s.sendTcpInfo()
 
 }
