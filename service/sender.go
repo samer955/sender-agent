@@ -37,32 +37,34 @@ func NewSender() *Sender {
 func (s *Sender) Start() {
 
 	s.subscribeTopics()
-	//check if the local peer is the only one in the Lan.
+
+	//check if the local peer is the only one in the Lan. If yes, wait.
 	for s.Node.Host.Peerstore().Peers().Len() == 1 {
 		continue
 	}
-	for _, topic := range s.PubSubService.Topics {
-		s.sendMetric(topic)
-	}
+	s.sendMetrics()
 
 }
 
-func (s *Sender) sendMetric(topic *psub.Topic) {
+func (s *Sender) sendMetrics() {
 
-	switch topic.String() {
+	for _, topic := range s.PubSubService.Topics {
 
-	case "SYSTEM":
-		go s.sendSystemMetric(topic)
-	case "CPU":
-		go s.sendCpuMetric(topic)
-	case "TCP":
-		go s.sendTcpMetric(topic)
-	case "MEMORY":
-		go s.sendMemoryMetric(topic)
-	case "BANDWIDTH":
-		go s.sendBandwidthMetric(topic)
-	default:
-		log.Println("Topic " + topic.String() + " " + "not found")
+		switch topic.String() {
+
+		case "SYSTEM":
+			go s.sendSystemMetric(topic)
+		case "CPU":
+			go s.sendCpuMetric(topic)
+		case "TCP":
+			go s.sendTcpMetric(topic)
+		case "MEMORY":
+			go s.sendMemoryMetric(topic)
+		case "BANDWIDTH":
+			go s.sendBandwidthMetric(topic)
+		default:
+			log.Println("Topic " + topic.String() + " " + "not found")
+		}
 	}
 
 }
@@ -93,7 +95,6 @@ func (s *Sender) publish(data any, topic *psub.Topic) {
 func (s *Sender) sendSystemMetric(topic *psub.Topic) {
 
 	for {
-
 		s.Node.Metrics.System.UUID = uuid.New().String()
 		s.Node.Metrics.System.Time = time.Now()
 		s.Node.Metrics.System.GetOnlineUsers()
@@ -108,7 +109,6 @@ func (s *Sender) sendSystemMetric(topic *psub.Topic) {
 func (s *Sender) sendCpuMetric(topic *psub.Topic) {
 
 	for {
-
 		s.Node.Metrics.Cpu.UUID = uuid.New().String()
 		s.Node.Metrics.Cpu.UpdateUtilization()
 		s.Node.Metrics.Cpu.Time = time.Now()
@@ -122,7 +122,6 @@ func (s *Sender) sendCpuMetric(topic *psub.Topic) {
 func (s *Sender) sendMemoryMetric(topic *psub.Topic) {
 
 	for {
-
 		s.Node.Metrics.Memory.UUID = uuid.New().String()
 		s.Node.Metrics.Memory.GetMemoryUtilization()
 		s.Node.Metrics.Memory.Time = time.Now()
@@ -136,7 +135,6 @@ func (s *Sender) sendMemoryMetric(topic *psub.Topic) {
 func (s *Sender) sendBandwidthMetric(topic *psub.Topic) {
 
 	for {
-
 		actual := s.Node.BandCounter.GetBandwidthTotals()
 		s.Node.Metrics.Bandwidth.UUID = uuid.New().String()
 		s.Node.Metrics.Bandwidth.TotalIn = actual.TotalIn
@@ -154,7 +152,6 @@ func (s *Sender) sendBandwidthMetric(topic *psub.Topic) {
 func (s *Sender) sendTcpMetric(topic *psub.Topic) {
 
 	for {
-
 		s.Node.Metrics.Tcp.UUID = uuid.New().String()
 		s.Node.Metrics.Tcp.GetConnectionsQueueSize()
 		s.Node.Metrics.Tcp.Time = time.Now()
