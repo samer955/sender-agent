@@ -154,6 +154,7 @@ func (s *Sender) sendTcpMetric(topic *psub.Topic) {
 	for {
 		s.Node.Metrics.Tcp.UUID = uuid.New().String()
 		s.Node.Metrics.Tcp.GetConnectionsQueueSize()
+		s.Node.Metrics.Tcp.GetSegments()
 		s.Node.Metrics.Tcp.Time = time.Now()
 
 		s.publish(s.Node.Metrics.Tcp, topic)
